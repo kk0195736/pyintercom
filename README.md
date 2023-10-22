@@ -17,6 +17,8 @@ pyintercom/
 │   └── utils/              # ユーティリティモジュール
 │       ├── __init__.py         # パッケージ初期化ファイル
 │       └── audio_player.py     # MP3音源の再生機能
+├── tools/               # pyintercomで使用するツール群
+│ └── request_sender.py     # APIを叩くプログラム
 └── requirements.txt      # 必要なPythonパッケージリスト
 ```
 
@@ -48,15 +50,82 @@ python pyintercom/chime_api_server.py
 - 配達員が来た場合のチャイム音:
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"chimeType": "delivery"}' http://[サーバーのアドレス]:5000/play-chime
+python tools/request_sender.py delivery
 ```
 
 - 一般の来客用のチャイム音:
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"chimeType": "visitor"}' http://[サーバーのアドレス]:5000/play-chime
+python tools/request_sender.py visitor
 ```
 
 ## ライセンス
 
 詳細は[LICENSE](LICENSE)を参照してください。
+
+---
+
+# pyintercom (English)
+
+`pyintercom` is an API server that plays specific chime sounds when visitors or delivery personnel arrive.
+
+## Directory Structure
+
+```
+pyintercom/
+├── LICENSE              # License information
+├── README.md            # This README file
+├── chime_sounds/        # Chime sound files
+│   ├── delivery_chime.mp3  # Chime for when a delivery person arrives
+│   └── visitor_chime.mp3   # Chime for general visitors
+├── pyintercom
+│   ├── __init__.py         # Package initialization file
+│   ├── chime_api_server.py # Main file for the chime API server
+│   └── utils/              # Utility modules
+│       ├── __init__.py         # Package initialization file
+│       └── audio_player.py     # MP3 audio playback function
+├── tools/               # Tools used by pyintercom
+│ └── request_sender.py     # Programs that call the API
+└── requirements.txt      # List of required Python packages
+```
+
+## Installation
+
+1. Clone this repository.
+
+```bash
+git clone [repository URL]
+cd pyintercom
+```
+
+2. Install the necessary Python packages.
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+1. Start the API server.
+
+```bash
+python pyintercom/chime_api_server.py
+```
+
+2. With the API server running, send a POST request to play a chime sound.
+
+- Chime for when a delivery person arrives:
+
+```bash
+python tools/request_sender.py delivery
+```
+
+- Chime for general visitors:
+
+```bash
+python tools/request_sender.py visitor
+```
+
+## License
+
+Please refer to the [LICENSE](LICENSE) for details.

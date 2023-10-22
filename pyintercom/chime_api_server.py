@@ -1,7 +1,7 @@
 from flask import Flask, request
 import threading
 import os
-from .utils import play_sound
+from utils import play_sound
 
 app = Flask(__name__)
 

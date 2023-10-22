@@ -60,7 +60,3 @@ curl -X POST -H "Content-Type: application/json" -d '{"chimeType": "visitor"}' h
 ## ライセンス
 
 詳細は[LICENSE](LICENSE)を参照してください。
-
----
-
-この`README.md`を`pyintercom`プロジェクトのルートディレクトリに保存してください。必要に応じて内容をカスタマイズして使用できます。

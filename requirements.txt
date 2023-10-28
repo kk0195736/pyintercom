@@ -3,3 +3,9 @@ Flask
 
 # MP3音源の再生のためのライブラリ
 pygame
+
+# .envファイルからの環境変数のロードに使用
+python-dotenv
+
+# シリアル通信を行うためのライブラリ
+pyserial

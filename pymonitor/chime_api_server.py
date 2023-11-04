@@ -1,7 +1,7 @@
 from flask import Flask, request
 import threading
 import os
-from utils import play_sound
+import pygame
 
 app = Flask(__name__)
 
@@ -9,6 +9,14 @@ app = Flask(__name__)
 DELIVERY_PERSON_CHIME = 'delivery'
 VISITOR_CHIME = 'visitor'
 CHIME_SOUNDS_PATH = os.environ.get('CHIME_SOUNDS_PATH', '../chime_sounds/')
+
+# pygame mixer の初期化
+pygame.mixer.init()
+
+def play_sound(filename):
+    """MP3ファイルを再生する関数"""
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.play()
 
 def get_sound_file_path(chime_type):
     """チャイムの種類に対応する音源ファイルのパスを返す"""

@@ -1,12 +1,15 @@
+import asyncio
 import tkinter as tk
-from message_handler import show_message
-import subprocess
+from utils import show_message, send_chime_request_async, send_camera_request_async
 
-def send_request(chime_type):
+async def send_request(chime_type):
     """
-    request_sender.py を呼び出してリクエストを送信する関数
+    カメラとチャイムのAPIを叩く
     """
-    subprocess.run(["python", "tools/request_sender.py", chime_type])
+    await asyncio.gather(
+        send_camera_request_async(chime_type),
+        send_chime_request_async(chime_type)
+    )
     show_message("メッセージ", "只今呼び出し中です。少々お待ちください。")
 
 def on_key(event):

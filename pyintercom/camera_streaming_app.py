@@ -1,15 +1,16 @@
 import os
 from dotenv import load_dotenv
 import cv2
-import requests
+import aiohttp
+import aiofiles
 from flask import Flask, Response, render_template, jsonify
 import threading
 import datetime
 
-# Load environment variables
+# 環境変数をロード
 load_dotenv()
 
-# Constants
+# 定数
 LINE_NOTIFY_TOKEN = os.getenv("LINE_NOTIFY_TOKEN")
 CAMERA_DEVICE_ID = 0
 CAMERA_WIDTH = 1920
@@ -24,7 +25,7 @@ latest_camera_frame = None
 
 def initialize_camera():
     """
-    Initialize and set up the camera with the specified configurations.
+    指定された設定でカメラを初期化およびセットアップします。
     """
     global camera
     camera = cv2.VideoCapture(CAMERA_DEVICE_ID)
@@ -36,8 +37,8 @@ def initialize_camera():
 
 def update_camera_frame():
     """
-    Continuously update the camera frame in the background.
-    If an error occurs while accessing the camera, the loop breaks.
+    バックグラウンドでカメラフレームを継続的に更新します。
+    カメラへのアクセス中にエラーが発生した場合、ループが中断します。
     """
     global latest_camera_frame
     while True:
@@ -52,16 +53,16 @@ def update_camera_frame():
             break
 
 
-# Start the thread to update the camera frame
+# カメラフレームの更新を開始するためのスレッド
 camera_update_thread = threading.Thread(target=update_camera_frame)
 camera_update_thread.start()
 
 def save_captured_image(frame):
     """
-    Save the captured frame as an image with a timestamp-based filename.
+    タイムスタンプを基にしたファイル名でキャプチャしたフレームを画像として保存します。
 
-    :param frame: Captured frame to be saved.
-    :return: Path to the saved image or None if there's an error.
+    :param frame: 保存するキャプチャフレーム。
+    :return: 保存された画像へのパスまたはエラーが発生した場合はNone。
     """
     now = datetime.datetime.now()
     image_path = "./images/" + now.strftime("%Y%m%d_%H%M%S") + ".jpg"
@@ -73,29 +74,35 @@ def save_captured_image(frame):
     return image_path
 
 
-def send_line_notify_with_image(message, image_filename):
+async def send_line_notify_with_image(message, image_filename):
     """
-    Send a message with an image to LINE using LINE Notify.
+    LINE Notifyを使用して画像付きのメッセージをLINEに送信します。
 
-    :param message: Message to be sent.
-    :param image_filename: Path to the image to be sent.
+    :param message: 送信するメッセージ。
+    :param image_filename: 送信する画像へのパス。
     """
     url = "https://notify-api.line.me/api/notify"
     headers = {"Authorization": "Bearer " + LINE_NOTIFY_TOKEN}
     payload = {"message": message}
-    files = {"imageFile": open(image_filename, "rb")}
-    try:
-        response = requests.post(url, headers=headers, params=payload, files=files)
-        response.raise_for_status()  # Check for HTTP errors
-    except requests.RequestException as e:
-        print(f"Error sending image to LINE Notify: {e}")
+
+    async with aiofiles.open(image_filename, "rb") as f:
+        image_data = await f.read()
+
+    files = {"imageFile": image_data}
+
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.post(url, headers=headers, data=payload, files=files) as response:
+                response.raise_for_status()  # Check for HTTP errors
+        except aiohttp.ClientError as e:
+            print(f"Error sending image to LINE Notify: {e}")
 
 
-def capture_image_and_notify(flag):
+async def capture_image_and_notify(flag):
     """
-    Capture an image from the camera, save it, and send a notification based on the flag.
+    カメラから画像をキャプチャし、フラグに基づいて通知を送信します。
 
-    :param flag: Determines the type of notification message to be sent.
+    :param flag: 送信する通知メッセージのタイプを決定します。
     """
     try:
         success, frame = camera.read()
@@ -111,7 +118,7 @@ def capture_image_and_notify(flag):
             2: "配達員以外の誰かが来ました。",
             3: "現在の状況を撮影しました。"
         }
-        send_line_notify_with_image(messages.get(flag, "不明な状況"), image_filename)
+        await send_line_notify_with_image(messages.get(flag, "不明な状況"), image_filename)
     except Exception as e:
         print(f"Unexpected error: {e}")
 
@@ -120,16 +127,16 @@ def capture_image_and_notify(flag):
 
 @app.route("/")
 def index():
-    """Render the main page."""
+    """メインページをレンダリングします。"""
     return render_template("index.html")
 
 
 @app.route("/video_feed")
 def video_feed():
     """
-    Provide video frames as a feed for streaming.
+    ストリーミングのためのビデオフレームをフィードとして提供します。
 
-    :return: Streamed video frames.
+    :return: ストリームされたビデオフレーム。
     """
 
     def generate_frames():
@@ -151,23 +158,23 @@ def video_feed():
 
 
 @app.route("/capture_delivery", methods=["GET", "POST"])
-def capture_delivery_image():
-    """Capture an image when a delivery person arrives."""
-    capture_image_and_notify(1)
+async def capture_delivery_image():
+    """配達員が到着したときの画像をキャプチャします。"""
+    await capture_image_and_notify(1)
     return jsonify({"message": "画像を保存しました"})
 
 
 @app.route("/capture_visitor", methods=["GET", "POST"])
-def capture_visitor_image():
-    """Capture an image when a visitor arrives."""
-    capture_image_and_notify(2)
+async def capture_visitor_image():
+    """訪問者が到着したときの画像をキャプチャします。"""
+    await capture_image_and_notify(2)
     return jsonify({"message": "画像を保存しました"})
 
 
 @app.route("/capture_current", methods=["POST"])
-def capture_current_situation_image():
-    """Capture the current situation's image."""
-    capture_image_and_notify(3)
+async def capture_current_situation_image():
+    """現在の状況の画像をキャプチャします。"""
+    await capture_image_and_notify(3)
     return "現在の状況を撮影しました。"
 
 

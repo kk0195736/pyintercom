@@ -1,7 +1,7 @@
-from flask import Flask, request
-import threading
+from flask import Flask, request, jsonify
 import os
 import pygame
+import asyncio
 
 app = Flask(__name__)
 
@@ -13,10 +13,12 @@ CHIME_SOUNDS_PATH = os.environ.get('CHIME_SOUNDS_PATH', '../chime_sounds/')
 # pygame mixer の初期化
 pygame.mixer.init()
 
-def play_sound(filename):
+async def play_sound(filename):
     """MP3ファイルを再生する関数"""
     pygame.mixer.music.load(filename)
     pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        await asyncio.sleep(1)
 
 def get_sound_file_path(chime_type):
     """チャイムの種類に対応する音源ファイルのパスを返す"""
@@ -27,25 +29,24 @@ def get_sound_file_path(chime_type):
     return None
 
 @app.route('/play-chime', methods=['POST'])
-def handle_play_chime_request():
+async def handle_play_chime_request():
     """チャイム音の再生を制御するAPIエンドポイント"""
     chime_type = request.json.get('chimeType')
 
     # 対応するチャイム音のファイル名を取得
     sound_file_path = get_sound_file_path(chime_type)
     if not sound_file_path:
-        return {'status': 'error', 'message': 'Invalid chimeType'}, 400
+        return jsonify({'status': 'error', 'message': 'Invalid chimeType'}), 400
 
     # モニターをオンにする
     os.system('export DISPLAY=:0.0 && xset dpms force on')
 
-    # 並列処理でMP3ファイルを再生
-    thread = threading.Thread(target=play_sound, args=(sound_file_path,))
-    thread.start()
+    # 非同期タスクとしてMP3ファイルを再生
+    asyncio.create_task(play_sound(sound_file_path))
 
-    return {'status': 'success'}, 200
+    return jsonify({'status': 'success'}), 200
 
 if __name__ == "__main__":
     HOST = os.environ.get('CHIME_API_HOST', '0.0.0.0')
     PORT = int(os.environ.get('CHIME_API_PORT', 5000))
-    app.run(host=HOST, port=PORT)
+    app.run(host=HOST, port=PORT, threaded=True)

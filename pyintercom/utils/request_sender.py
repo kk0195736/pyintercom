@@ -1,5 +1,4 @@
 import aiohttp
-import asyncio
 import sys
 
 async def send_chime_request_async(chime_type):
@@ -20,12 +19,23 @@ async def send_chime_request_async(chime_type):
                 print(f"Failed to send request! Status code: {response.status}")
                 print(await response.text())
 
-def send_camera_request_async(chime_type):
+async def send_capture_image_request_async(chime_type):
     """
-    カメラストリーミングサーバにリクエストを飛ばす。
-    サーバ側で画像を保存、LINEに通知を飛ばす。
+    画像キャプチャAPIサーバにリクエストを飛ばす。
     """
-    pass
+    url = "http://localhost:8080/capture_image"
+    payload = {"chimeType": chime_type}
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=payload, headers=headers) as response:
+            if response.status == 200:
+                print(f"Requested to capture {chime_type} image!")
+            else:
+                print(f"Failed to send request! Status code: {response.status}")
+                print(await response.text())
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

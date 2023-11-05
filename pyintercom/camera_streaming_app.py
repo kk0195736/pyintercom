@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import cv2
 import aiohttp
 import aiofiles
-from flask import Flask, Response, render_template, jsonify
+from flask import Flask, Response, render_template, jsonify, request
 import threading
 import datetime
 
@@ -157,25 +157,29 @@ def video_feed():
     )
 
 
-@app.route("/capture_delivery", methods=["GET", "POST"])
-async def capture_delivery_image():
-    """配達員が到着したときの画像をキャプチャします。"""
-    await capture_image_and_notify(1)
-    return jsonify({"message": "画像を保存しました"})
+@app.route("/capture_image", methods=["POST"])
+async def capture_image():
+    """
+    状態に基づいて画像をキャプチャします。
+    POSTリクエストのボディに'state'というキーが必要です。
+    'state'の値によって、通知の種類が決まります。
+    """
+    state = request.json.get('state')
 
+    if not state:
+        return jsonify({"error": "state is required"}), 400
 
-@app.route("/capture_visitor", methods=["GET", "POST"])
-async def capture_visitor_image():
-    """訪問者が到着したときの画像をキャプチャします。"""
-    await capture_image_and_notify(2)
-    return jsonify({"message": "画像を保存しました"})
-
-
-@app.route("/capture_current", methods=["POST"])
-async def capture_current_situation_image():
-    """現在の状況の画像をキャプチャします。"""
-    await capture_image_and_notify(3)
-    return "現在の状況を撮影しました。"
+    if state == "delivery":
+        await capture_image_and_notify(1)
+        return jsonify({"message": "配達員が到着したときの画像を保存しました"})
+    elif state == "visitor":
+        await capture_image_and_notify(2)
+        return jsonify({"message": "訪問者が到着したときの画像を保存しました"})
+    elif state == "current":
+        await capture_image_and_notify(3)
+        return jsonify({"message": "現在の状況の画像を保存しました"})
+    else:
+        return jsonify({"error": "Invalid state"}), 400
 
 
 if __name__ == "__main__":

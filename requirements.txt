@@ -12,3 +12,6 @@ pyserial
 
 # 非同期HTTPリクエスト
 aiohttp
+
+# 非ブロッキングのファイル読み込み
+aiofiles

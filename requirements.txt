@@ -15,3 +15,6 @@ aiohttp
 
 # 非ブロッキングのファイル読み込み
 aiofiles
+
+# OpenCV
+opencv-python

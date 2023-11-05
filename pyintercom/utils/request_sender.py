@@ -5,7 +5,7 @@ async def send_chime_request_async(chime_type):
     """
     チャイムAPIサーバにリクエストを飛ばす。
     """
-    url = "http://localhost:5000/play-chime"
+    url = "http://192.168.100.103:5000/play-chime"
     payload = {"chimeType": chime_type}
     headers = {
         "Content-Type": "application/json"

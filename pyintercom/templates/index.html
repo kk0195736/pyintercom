@@ -57,10 +57,14 @@
         window.addEventListener('load', adjustVideoSize);
 
         document.getElementById('execute-button').addEventListener('click', function() {
-            fetch('/execute', {
-                method: 'POST'
-            }).then(response => response.text()).then(data => {
-                document.getElementById('message').innerText = data;
+            fetch('/capture_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ state: 'current' })  // ここでstateを設定
+            }).then(response => response.json()).then(data => {
+                document.getElementById('message').innerText = data.message;
             });
         });
     </script>

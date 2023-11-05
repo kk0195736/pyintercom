@@ -13,8 +13,8 @@ load_dotenv()
 # 定数
 LINE_NOTIFY_TOKEN = os.getenv("LINE_NOTIFY_TOKEN")
 CAMERA_DEVICE_ID = 0
-CAMERA_WIDTH = 1920
-CAMERA_HEIGHT = 1080
+CAMERA_WIDTH = 1280
+CAMERA_HEIGHT = 720
 CAMERA_FPS = 30
 
 app = Flask(__name__)
@@ -32,7 +32,7 @@ def initialize_camera():
     camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
-    camera.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
+    #camera.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
 
 
 def update_camera_frame():
